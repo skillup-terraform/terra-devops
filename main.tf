@@ -83,19 +83,3 @@ resource "aws_instance" "terra_ec2" {
     }
 
 }
-
-resource "aws_ebs_volume" "terra_ebs_volume" {
-  type = "gp2"  
-  size = 10
-  availability_zone = aws_instance.terra_ec2.availability_zone
-  tags = {
-    "Environment" = "DEV"
-  }
-  
-}
-
-resource "aws_volume_attachment" "terra-volume-attachemnt" {
-  device_name = "/dev/sdh"
-  volume_id = aws_ebs_volume.terra_ebs_volume.id
-  instance_id = aws_instance.terra_ec2.id
-}
