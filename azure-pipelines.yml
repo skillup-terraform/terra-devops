@@ -1,18 +1,97 @@
-# Starter pipeline
-# Start with a minimal pipeline that you can customize to build and deploy your code.
-# Add steps that build, run tests, deploy, and more:
-# https://aka.ms/yaml
+trigger:
+  branches:
+    include:
+    - main
 
-trigger: none
+pr:
+- main
 
 pool:
-  vmImage: ubuntu-latest
+  name: default
 
-steps:
-- script: echo Hello, world!
-  displayName: 'Run a one-line script'
+stages:
+  - stage: terraformInt
+    displayName: 'terraform init'
+    jobs:
+      - job: terraform_init
+        displayName: 'terraform init'
+        condition: always()
+        steps:
+          - script: |
+              terraform init
+          - task: CopyFiles@2
+            inputs:
+              sourceFolder: $(Build.SourcesDirectory)
+              targetFolder: $(Build.ArtifactStagingDirectory)  
+          - task: PublishBuildArtifacts@1
+            inputs:
+              PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+              ArtifactName: 'drop'
 
-- script: |
-    echo Add other tasks to build, test, and deploy your project.
-    echo See https://aka.ms/yaml
-  displayName: 'Run a multi-line script'
+  - stage: terraformValidatePR
+    displayName: 'PR terraform validate'
+    jobs:
+      - job: terraform_validate
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+        steps:
+        - task: DownloadBuildArtifacts@1
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(System.ArtifactsDirectory)'
+
+        - script: |
+            cd '$(System.ArtifactsDirectory)'/drop
+            echo "Below is the current path"
+            pwd
+            echo "Setting execution mode"
+            chmod -R +x .terraform
+            terraform validate
+
+
+  - stage: terraformPlanPR
+    displayName: 'PR terraform plan'
+    jobs:
+      - job: terraform_plan
+        condition: eq(variables['Build.Reason'], 'PullRequest')
+        steps:
+        - task: DownloadBuildArtifacts@1
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(System.ArtifactsDirectory)'
+
+        - script: |
+            cd '$(System.ArtifactsDirectory)'/drop
+            echo "Below is the current path"
+            pwd
+            echo "Setting execution mode"
+            chmod -R +x .terraform
+            terraform plan
+
+
+  - stage: MergeRequest
+    displayName: 'Merge terrafoorm apply'
+    jobs:
+      - job: terraform_apply
+        displayName: 'terraform apply'
+        condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+        steps:
+        - task: DownloadBuildArtifacts@1
+          inputs:
+            buildType: 'current'
+            downloadType: 'single'
+            artifactName: 'drop'
+            downloadPath: '$(System.ArtifactsDirectory)'
+
+        - script: |
+            cd '$(System.ArtifactsDirectory)'/drop
+            echo "Below is the current path"
+            pwd
+            echo "Setting execution mode"
+            chmod -R +x .terraform
+            terraform apply -auto-approve
+
+      
