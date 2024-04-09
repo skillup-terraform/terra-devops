@@ -6,8 +6,11 @@ terraform {
     }
   }
 backend "s3" {
-bucket = "asdfasdf"
-}
+  bucket = "terra-157673692367"
+  key = "test"
+  region = "ap-south-1"
+  dynamodb_table = "terraform-state-lock"
+  }
 }
 
 provider "aws" {
