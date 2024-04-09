@@ -5,6 +5,9 @@ terraform {
       version = "3.75.2"
     }
   }
+backend "s3" {
+bucket = "asdfasdf"
+}
 }
 
 provider "aws" {
