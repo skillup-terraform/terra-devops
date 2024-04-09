@@ -92,6 +92,6 @@ stages:
             pwd
             echo "Setting execution mode"
             chmod -R +x .terraform
-            terraform apply -auto-approve
+            terraform destroy -auto-approve
 
       
