@@ -5,14 +5,14 @@ pipeline {
         // These come from Jenkins credentials binding
         ARM_CLIENT_ID     = credentials('azure_client_id')
         ARM_CLIENT_SECRET = credentials('azure_client_secret')
-        ARM_TENANT_ID = "d7a7dafa-5952-439d-b904-78bf6a481c7"
+        ARM_TENANT_ID = "d7a7dafa-5952-439d-b904-78bf6a481c7d"
     }
 
     stages {
         stage('Terraform Init') {
             steps {
                 sh """
-                    terraform init
+                    terraform ini
                 """
             }
         }
