@@ -54,7 +54,7 @@ pipeline {
                 echo "Main branch commit detected—running terraform apply..."
 
                 sh """
-                    terraform apply
+                    terraform apply --auto-approve
                 """
             }
         }
