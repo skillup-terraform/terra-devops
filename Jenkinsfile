@@ -12,7 +12,7 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 sh """
-                    terraform ini
+                    terraform ini  
                 """
             }
         }
