@@ -28,7 +28,7 @@ variable "public_network_access_enabled" {
 
 variable "vnet_address_space" {
   type = list(string)
-  default = ["10.0.0.0/16","10.0.0.0/18", "10.0.0.0/20"]
+  default = ["10.0.0.0/16"]
 }
 
 
