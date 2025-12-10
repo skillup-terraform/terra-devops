@@ -9,15 +9,6 @@ pipeline {
     }
 
     stages {
-
-        stage('Clone Repository') {
-            steps {
-                echo "Cloning repo..."
-                git branch: 'main',
-                    url: 'https://github.com/skillup-terraform/terra-devops.git'
-            }
-        }
-
         stage('Terraform Init') {
             steps {
                 sh """
