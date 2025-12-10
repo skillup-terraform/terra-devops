@@ -40,7 +40,3 @@ variable "tags" {
     "project_number" = 1223
   }
 }
-
-variable "resource_group_name" {
-  type = string
-}
