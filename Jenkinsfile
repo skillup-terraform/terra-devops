@@ -88,9 +88,11 @@ pipeline {
         stage('Run Env Tasks') {
             steps {
                 script {
-                    export ARM_CLIENT_ID='${env.ARM_CLIENT_ID}'
-                    export ARM_CLIENT_SECRET='${env.ARM_CLIENT_SECRET}'
-                    export ARM_TENANT_ID='${env.ARM_TENANT_ID}'
+                    sh """
+                        export ARM_CLIENT_ID='${env.ARM_CLIENT_ID}'
+                        export ARM_CLIENT_SECRET='${env.ARM_CLIENT_SECRET}'
+                        export ARM_TENANT_ID='${env.ARM_TENANT_ID}'
+                    """
                     if (IS_PR == "true") {
                         echo "Running PR validation for ${ENVIRONMENT.toUpperCase()}"
 
