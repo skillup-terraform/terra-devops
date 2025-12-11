@@ -8,3 +8,8 @@ module "network" {
   subscription_id = "f154a823-7b49-4f69-a16a-5caf74c6b35a"
 }
 
+
+
+
+
+
