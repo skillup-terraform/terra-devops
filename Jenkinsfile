@@ -103,6 +103,10 @@ pipeline {
 
                     if (ENVIRONMENT == "dev") {
                         sh "echo Deploying to DEV"
+                        sh """
+                            terraform init
+                            terraform plan
+                        """
                     }
                     if (ENVIRONMENT == "qa") {
                         sh "echo Deploying to QA"
