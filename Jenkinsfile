@@ -101,6 +101,7 @@ pipeline {
                             sh """
                                 pwd
                                 cd ./envs/dev
+                                pwd
                                 terraform init
                                 terraform plan
                             """
