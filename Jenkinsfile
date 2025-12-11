@@ -94,6 +94,8 @@ pipeline {
                         if (ENVIRONMENT == "dev") {
                             sh "echo Deploying to DEV"
                             sh """
+                                pwd
+                                cd ./envs/dev
                                 terraform init
                                 terraform plan
                             """
