@@ -1,7 +1,7 @@
 pipeline {
     agent any
-    
-    environment {
+    options { timestamps() }
+        environment {
         // These come from Jenkins credentials binding
         ARM_CLIENT_ID     = credentials('azure_client_id')
         ARM_CLIENT_SECRET = credentials('azure_client_secret')
@@ -9,55 +9,109 @@ pipeline {
     }
 
     stages {
-        stage('Terraform Init') {
+
+        stage('Detect PR or Merge') {
             steps {
-                sh """
-                    terraform init
-                """
+                script {
+                    IS_PR = env.CHANGE_ID ? "true" : "false"
+                    PR_NUMBER = env.CHANGE_ID ?: ""
+                    SOURCE_BRANCH = env.CHANGE_BRANCH ?: env.BRANCH_NAME
+                    TARGET_BRANCH = env.CHANGE_TARGET ?: ""
+                    COMMIT_SHA = env.GIT_COMMIT
+
+                    echo """
+                    ===== Build Context =====
+                    PR: ${IS_PR}  (PR #${PR_NUMBER})
+                    Source Branch: ${SOURCE_BRANCH}
+                    Target Branch: ${TARGET_BRANCH}
+                    Commit: ${COMMIT_SHA}
+                    =========================
+                    """
+                }
             }
         }
 
-        stage('Terraform Plan 1 (PR Only)') {
-            when {
-                expression { env.CHANGE_ID != null }   // Only pull requests
-            }
+        stage('Get Changed Files') {
             steps {
-                echo "Pull Request detected! PR Number: ${env.CHANGE_ID}"
-                echo "Running terraform plan..."
+                script {
+                    sh "git fetch --all"
 
-                sh """
-                    terraform plan
-                """
+                    def target = TARGET_BRANCH ?: "origin/${SOURCE_BRANCH}"
+
+                    changedFiles = sh(
+                        script: "git diff --name-only ${target}",
+                        returnStdout: true
+                    ).trim().split("\n")
+
+                    echo "Changed Files:\n${changedFiles.join('\n')}"
+                }
             }
         }
 
-        stage('Terraform Plan 2 (PR Only)') {
-            when {
-                expression { env.CHANGE_ID != null }   // Only pull requests
-            }
+        stage('Detect Environment') {
             steps {
-                echo "Pull Request detected! PR Number: ${env.CHANGE_ID}"
-                echo "Running terraform plan..."
+                script {
+                    ENVIRONMENT = ""
 
-                sh """
-                    terraform plan
-                """
+                    if (changedFiles.any { it.startsWith("envs/dev/") }) {
+                        ENVIRONMENT = "dev"
+                    }
+                    if (changedFiles.any { it.startsWith("envs/qa/") }) {
+                        ENVIRONMENT = "qa"
+                    }
+                    if (changedFiles.any { it.startsWith("envs/prod/") }) {
+                        ENVIRONMENT = "prod"
+                    }
+
+                    if (!ENVIRONMENT) {
+                        error "No environment changes detected in envs/dev|qa|prod"
+                    }
+
+                    echo "Detected Environment: ${ENVIRONMENT.toUpperCase()}"
+                }
             }
         }
 
-        stage('Terraform Apply (Main Branch Only)') {
-            when {
-                branch 'main'
-                expression { env.CHANGE_ID == null }  // Not a PR, only normal main push
-            }
-            steps {
-                echo "Main branch commit detected—running terraform apply..."
+        // stage('Checkout Exact Commit') {
+        //     steps {
+        //         script {
+        //             echo "Checking out commit ${COMMIT_SHA}"
+        //             checkout([
+        //                 $class: 'GitSCM',
+        //                 branches: [[name: COMMIT_SHA]],
+        //                 userRemoteConfigs: [[url: "https://github.com/your-org/your-repo.git"]]
+        //             ])
+        //         }
+        //     }
+        // }
 
-                sh """
-                    terraform apply --auto-approve
-                """
+        stage('Run Env Tasks') {
+            steps {
+                script {
+                    if (IS_PR == "true") {
+                        echo "Running PR validation for ${ENVIRONMENT.toUpperCase()}"
+
+                        sh """
+                            echo 'Running syntax checks'
+                            echo 'Running tests for PR ${PR_NUMBER} in ${ENVIRONMENT}'
+                        """
+
+                        return
+                    }
+
+                    echo "Running MERGE deployment for ${ENVIRONMENT.toUpperCase()}"
+
+                    if (ENVIRONMENT == "dev") {
+                        sh "echo Deploying to DEV"
+                    }
+                    if (ENVIRONMENT == "qa") {
+                        sh "echo Deploying to QA"
+                    }
+                    if (ENVIRONMENT == "prod") {
+                        sh "echo Deploying to PROD"
+                    }
+                }
             }
         }
     }
-    
 }
