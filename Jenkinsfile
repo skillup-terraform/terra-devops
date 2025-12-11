@@ -39,7 +39,7 @@ pipeline {
                     def target = TARGET_BRANCH ?: "origin/${SOURCE_BRANCH}"
 
                     changedFiles = sh(
-                        script: "git diff --name-only ${target}",
+                        script: "git diff --name-only origin/${target}",
                         returnStdout: true
                     ).trim().split("\n")
 
