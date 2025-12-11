@@ -91,28 +91,45 @@ pipeline {
                     if (IS_PR == "true") {
                         echo "Running PR validation for ${ENVIRONMENT.toUpperCase()}"
 
-                        sh """
-                            echo 'Running syntax checks'
-                            echo 'Running tests for PR ${PR_NUMBER} in ${ENVIRONMENT}'
-                        """
-
-                        return
+                        if (ENVIRONMENT == "dev") {
+                            sh "echo Deploying to DEV"
+                            sh """
+                                terraform init
+                                terraform plan
+                            """
+                        }
+                        if (ENVIRONMENT == "qa") {
+                            sh "echo Deploying to QA"
+                            sh """
+                                terraform init
+                                terraform plan
+                            """
+                        }
+                        if (ENVIRONMENT == "prod") {
+                            sh "echo Deploying to PROD"
+                            sh """
+                                terraform init
+                                terraform plan
+                            """
+                        }
                     }
+                    else {
 
-                    echo "Running MERGE deployment for ${ENVIRONMENT.toUpperCase()}"
+                        echo "Running MERGE deployment for ${ENVIRONMENT.toUpperCase()}"
 
-                    if (ENVIRONMENT == "dev") {
-                        sh "echo Deploying to DEV"
-                        sh """
-                            terraform init
-                            terraform plan
-                        """
-                    }
-                    if (ENVIRONMENT == "qa") {
-                        sh "echo Deploying to QA"
-                    }
-                    if (ENVIRONMENT == "prod") {
-                        sh "echo Deploying to PROD"
+                        if (ENVIRONMENT == "dev") {
+                            sh "echo Deploying to DEV"
+                            sh """
+                                terraform init
+                                terraform plan
+                            """
+                        }
+                        if (ENVIRONMENT == "qa") {
+                            sh "echo Deploying to QA"
+                        }
+                        if (ENVIRONMENT == "prod") {
+                            sh "echo Deploying to PROD"
+                        }
                     }
                 }
             }
